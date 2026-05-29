@@ -328,7 +328,7 @@ function downloadCalendar() {
   const { year, month } = parseMonth(state.month);
   const rowCount = getExportDays(year, month).length / 7;
   canvas.width = 2400;
-  canvas.height = 520 + rowCount * 220;
+  canvas.height = 520 + rowCount * 260;
   const ctx = canvas.getContext("2d");
   drawExport(ctx, canvas.width, canvas.height);
 
@@ -415,16 +415,16 @@ function drawExportDay(ctx, date, x, y, w, h, current) {
   drawPill(ctx, x + 26, y + 86, meta.label, meta.color);
   ctx.fillStyle = "#17211f";
   ctx.font = "900 28px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
-  drawExportText(ctx, fitText(ctx, info.time, w - 52), x + 26, y + 150, { tracking: -0.8 });
+  drawExportText(ctx, fitText(ctx, info.time, w - 52), x + 26, y + 166, { tracking: -0.8 });
 
   ctx.fillStyle = "#66736f";
   ctx.font = "800 22px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
-  drawExportText(ctx, info.lunch ? fitText(ctx, info.lunch, w - 52) : "", x + 26, y + 180, { tracking: -0.8 });
+  drawExportText(ctx, info.lunch ? fitText(ctx, info.lunch, w - 52) : "", x + 26, y + 202, { tracking: -0.8 });
 
   if (info.memo) {
     ctx.fillStyle = "#66736f";
     ctx.font = "700 23px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
-    drawExportText(ctx, fitText(ctx, info.memo, w - 52), x + 26, y + 208, { tracking: -0.8 });
+    drawExportText(ctx, fitText(ctx, info.memo, w - 52), x + 26, y + 238, { tracking: -0.8 });
   }
   ctx.globalAlpha = 1;
 }
