@@ -151,8 +151,8 @@ function syncWeekdayRows() {
     row.querySelector('[data-field="end"]').value = data.end;
     row.querySelector('[data-field="status"]').value = data.status;
     const lunchInput = row.querySelector('[data-field="hasLunch"]');
-    lunchInput.checked = data.hasLunch;
-    lunchInput.disabled = data.status === "closed" || data.status === "morning";
+    lunchInput.checked = data.status === "extended" ? true : data.hasLunch;
+    lunchInput.disabled = data.status === "closed" || data.status === "morning" || data.status === "extended";
   });
 }
 
@@ -162,17 +162,20 @@ function updateWeeklyFromRows(event) {
   const day = row.dataset.day;
   const status = row.querySelector('[data-field="status"]').value;
   const lunchInput = row.querySelector('[data-field="hasLunch"]');
+  const mustHaveLunch = status === "extended";
   const canHaveLunch = status !== "closed" && status !== "morning";
-  if (!canHaveLunch) {
+  if (mustHaveLunch) {
+    lunchInput.checked = true;
+  } else if (!canHaveLunch) {
     lunchInput.checked = false;
   }
-  lunchInput.disabled = !canHaveLunch;
+  lunchInput.disabled = !canHaveLunch || mustHaveLunch;
 
   state.weekly[day] = {
     start: row.querySelector('[data-field="start"]').value,
     end: row.querySelector('[data-field="end"]').value,
     status,
-    hasLunch: canHaveLunch && lunchInput.checked,
+    hasLunch: mustHaveLunch || (canHaveLunch && lunchInput.checked),
   };
   persistAndRender();
 }
@@ -275,7 +278,7 @@ function renderDayCell(day, currentYear, currentMonth) {
         <span class="schedule-tag ${typeMeta[info.type].className}">${typeMeta[info.type].label}</span>
         <span class="schedule-time">${escapeHtml(info.time)}</span>
         <span class="schedule-lunch ${info.lunch ? "" : "is-empty"}">${info.lunch ? escapeHtml(info.lunch) : "&nbsp;"}</span>
-        ${info.memo ? `<span class="schedule-memo">${escapeHtml(info.memo)}</span>` : ""}
+        <span class="schedule-memo ${info.memo ? "" : "is-empty"}">${info.memo ? escapeHtml(info.memo) : "&nbsp;"}</span>
       </div>
     </article>
   `;
@@ -300,7 +303,7 @@ function getDayInfo(date) {
     return {
       type: special.type,
       time: specialTime,
-      lunch: getLunchText(weekly, special.type),
+      lunch: getLunchText(weekly, special.type, true),
       memo: "",
     };
   }
@@ -313,8 +316,10 @@ function getDayInfo(date) {
   };
 }
 
-function getLunchText(weekly, status) {
-  if (!weekly.hasLunch || status === "closed" || status === "morning") return "";
+function getLunchText(weekly, status, isSpecialOverride = false) {
+  if (status === "closed") return "";
+  if (status === "morning") return "점심시간 없음";
+  if (!weekly.hasLunch && !isSpecialOverride) return "점심시간 없음";
   return `점심 ${state.lunch.start}-${state.lunch.end}`;
 }
 
@@ -535,6 +540,11 @@ function mergeState(base, saved) {
       }
     });
   }
+  Object.values(weekly).forEach((day) => {
+    if (day.status === "extended") {
+      day.hasLunch = true;
+    }
+  });
 
   return {
     ...structuredClone(base),

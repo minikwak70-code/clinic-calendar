@@ -572,9 +572,14 @@ select:focus {
 }
 
 .schedule-memo {
+  min-height: 17px;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.schedule-memo.is-empty {
+  visibility: hidden;
 }
 
 @media (max-width: 1080px) {
