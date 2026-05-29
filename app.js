@@ -10,6 +10,7 @@ const weekdays = [
 
 const typeMeta = {
   regular: { label: "일반진료", className: "regular", color: "#16816f" },
+  morning: { label: "오전진료", className: "morning", color: "#2f8fb3" },
   night: { label: "야간진료", className: "night", color: "#7c6bc9" },
   extended: { label: "연장진료", className: "extended", color: "#c8912f" },
   closed: { label: "휴무일", className: "closed", color: "#d84949" },
@@ -17,18 +18,20 @@ const typeMeta = {
 };
 
 const defaultState = {
+  schemaVersion: 2,
   clinicName: "공덕경희한의원",
   clinicNote: "진료 일정은 병원 사정에 따라 변경될 수 있습니다.",
   month: getMonthValue(new Date()),
   showAdjacentMonths: true,
+  lunch: { start: "13:00", end: "14:00" },
   weekly: {
-    sun: { status: "closed", start: "09:00", end: "13:00" },
-    mon: { status: "regular", start: "09:30", end: "18:30" },
-    tue: { status: "night", start: "09:30", end: "20:30" },
-    wed: { status: "regular", start: "09:30", end: "18:30" },
-    thu: { status: "extended", start: "09:30", end: "19:30" },
-    fri: { status: "regular", start: "09:30", end: "18:30" },
-    sat: { status: "regular", start: "09:00", end: "14:00" },
+    sun: { status: "closed", start: "09:00", end: "13:00", hasLunch: false },
+    mon: { status: "regular", start: "09:30", end: "19:00", hasLunch: true },
+    tue: { status: "night", start: "09:30", end: "20:00", hasLunch: true },
+    wed: { status: "regular", start: "09:30", end: "19:00", hasLunch: true },
+    thu: { status: "morning", start: "09:30", end: "14:00", hasLunch: false },
+    fri: { status: "night", start: "09:30", end: "20:00", hasLunch: true },
+    sat: { status: "morning", start: "09:30", end: "14:00", hasLunch: false },
   },
   specials: [],
 };
@@ -38,6 +41,8 @@ const els = {
   clinicNote: document.querySelector("#clinicNote"),
   monthInput: document.querySelector("#monthInput"),
   showAdjacentMonths: document.querySelector("#showAdjacentMonths"),
+  lunchStart: document.querySelector("#lunchStart"),
+  lunchEnd: document.querySelector("#lunchEnd"),
   weekdayRows: document.querySelector("#weekdayRows"),
   specialDate: document.querySelector("#specialDate"),
   specialType: document.querySelector("#specialType"),
@@ -70,12 +75,14 @@ function init() {
 }
 
 function bindStaticEvents() {
-  [els.clinicName, els.clinicNote, els.monthInput, els.showAdjacentMonths].forEach((input) => {
+  [els.clinicName, els.clinicNote, els.monthInput, els.showAdjacentMonths, els.lunchStart, els.lunchEnd].forEach((input) => {
     input.addEventListener("input", () => {
       state.clinicName = els.clinicName.value.trim();
       state.clinicNote = els.clinicNote.value.trim();
       state.month = els.monthInput.value || getMonthValue(new Date());
       state.showAdjacentMonths = els.showAdjacentMonths.checked;
+      state.lunch.start = els.lunchStart.value || defaultState.lunch.start;
+      state.lunch.end = els.lunchEnd.value || defaultState.lunch.end;
       persistAndRender();
     });
   });
@@ -108,16 +115,22 @@ function renderWeekdayRows() {
           <input type="time" data-field="end" aria-label="${day.label}요일 종료 시간" />
           <select data-field="status" aria-label="${day.label}요일 진료 구분">
             <option value="regular">일반</option>
+            <option value="morning">오전</option>
             <option value="night">야간</option>
             <option value="extended">연장</option>
             <option value="closed">휴무</option>
           </select>
+          <label class="weekday-lunch">
+            <input type="checkbox" data-field="hasLunch" aria-label="${day.label}요일 점심시간 표시" />
+            <span>점심</span>
+          </label>
         </div>
       `,
     )
     .join("");
 
   els.weekdayRows.addEventListener("input", updateWeeklyFromRows);
+  els.weekdayRows.addEventListener("change", updateWeeklyFromRows);
 }
 
 function syncForm() {
@@ -125,6 +138,8 @@ function syncForm() {
   els.clinicNote.value = state.clinicNote;
   els.monthInput.value = state.month;
   els.showAdjacentMonths.checked = state.showAdjacentMonths;
+  els.lunchStart.value = state.lunch.start;
+  els.lunchEnd.value = state.lunch.end;
   syncWeekdayRows();
 }
 
@@ -135,6 +150,9 @@ function syncWeekdayRows() {
     row.querySelector('[data-field="start"]').value = data.start;
     row.querySelector('[data-field="end"]').value = data.end;
     row.querySelector('[data-field="status"]').value = data.status;
+    const lunchInput = row.querySelector('[data-field="hasLunch"]');
+    lunchInput.checked = data.hasLunch;
+    lunchInput.disabled = data.status === "closed" || data.status === "morning";
   });
 }
 
@@ -142,10 +160,19 @@ function updateWeeklyFromRows(event) {
   const row = event.target.closest(".weekday-row");
   if (!row) return;
   const day = row.dataset.day;
+  const status = row.querySelector('[data-field="status"]').value;
+  const lunchInput = row.querySelector('[data-field="hasLunch"]');
+  const canHaveLunch = status !== "closed" && status !== "morning";
+  if (!canHaveLunch) {
+    lunchInput.checked = false;
+  }
+  lunchInput.disabled = !canHaveLunch;
+
   state.weekly[day] = {
     start: row.querySelector('[data-field="start"]').value,
     end: row.querySelector('[data-field="end"]').value,
-    status: row.querySelector('[data-field="status"]').value,
+    status,
+    hasLunch: canHaveLunch && lunchInput.checked,
   };
   persistAndRender();
 }
@@ -174,6 +201,7 @@ function addSpecial() {
 function updateSpecialPlaceholder() {
   const placeholders = {
     closed: "예: 학회 참석 / 내부공사 / 명절 휴진",
+    morning: "예: 09:30-14:00",
     night: "예: 14:00-21:00",
     extended: "예: 09:30-20:00",
     notice: "예: 원장님 세미나로 접수 조기마감",
@@ -246,6 +274,7 @@ function renderDayCell(day, currentYear, currentMonth) {
       <div class="schedule-info">
         <span class="schedule-tag ${typeMeta[info.type].className}">${typeMeta[info.type].label}</span>
         <span class="schedule-time">${escapeHtml(info.time)}</span>
+        <span class="schedule-lunch ${info.lunch ? "" : "is-empty"}">${info.lunch ? escapeHtml(info.lunch) : "&nbsp;"}</span>
         ${info.memo ? `<span class="schedule-memo">${escapeHtml(info.memo)}</span>` : ""}
       </div>
     </article>
@@ -259,26 +288,34 @@ function getDayInfo(date) {
   const weekly = state.weekly[dayKey];
 
   if (special?.type === "closed") {
-    return { type: "closed", time: "휴진", memo: special.text };
+    return { type: "closed", time: "휴진", lunch: "", memo: special.text };
   }
 
   if (weekly.status === "closed") {
-    return { type: "closed", time: "휴진", memo: special?.text || "" };
+    return { type: "closed", time: "휴진", lunch: "", memo: special?.text || "" };
   }
 
   if (special?.type && special.type !== "notice") {
+    const specialTime = special.text || `${weekly.start}-${weekly.end}`;
     return {
       type: special.type,
-      time: special.text || `${weekly.start}-${weekly.end}`,
-      memo: "특정일 일정",
+      time: specialTime,
+      lunch: getLunchText(weekly, special.type),
+      memo: "",
     };
   }
 
   return {
     type: weekly.status,
     time: `${weekly.start}-${weekly.end}`,
+    lunch: getLunchText(weekly, weekly.status),
     memo: special?.text || "",
   };
+}
+
+function getLunchText(weekly, status) {
+  if (!weekly.hasLunch || status === "closed" || status === "morning") return "";
+  return `점심 ${state.lunch.start}-${state.lunch.end}`;
 }
 
 function downloadCalendar() {
@@ -375,16 +412,20 @@ function drawExportDay(ctx, date, x, y, w, h, current) {
   ctx.font = "900 28px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
   drawExportText(ctx, fitText(ctx, info.time, w - 52), x + 26, y + 166, { tracking: -0.8 });
 
+  ctx.fillStyle = "#66736f";
+  ctx.font = "800 22px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
+  drawExportText(ctx, info.lunch ? fitText(ctx, info.lunch, w - 52) : "", x + 26, y + 199, { tracking: -0.8 });
+
   if (info.memo) {
     ctx.fillStyle = "#66736f";
     ctx.font = "700 23px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
-    drawExportText(ctx, fitText(ctx, info.memo, w - 52), x + 26, y + 202, { tracking: -0.8 });
+    drawExportText(ctx, fitText(ctx, info.memo, w - 52), x + 26, y + 230, { tracking: -0.8 });
   }
   ctx.globalAlpha = 1;
 }
 
 function drawLegend(ctx, x, y) {
-  const items = ["regular", "night", "extended", "closed"];
+  const items = ["regular", "morning", "night", "extended", "closed"];
   let cursor = x;
   ctx.font = "900 28px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
   items.forEach((key) => {
@@ -480,10 +521,27 @@ function loadState() {
 }
 
 function mergeState(base, saved) {
+  const weekly = structuredClone(base.weekly);
+  Object.entries(saved.weekly || {}).forEach(([key, value]) => {
+    weekly[key] = { ...weekly[key], ...value };
+  });
+  if ((saved.schemaVersion || 1) < 2) {
+    weekly.thu = { ...weekly.thu, status: "morning", start: "09:30", end: "14:00", hasLunch: false };
+    weekly.sat = { ...weekly.sat, status: "morning", start: "09:30", end: "14:00", hasLunch: false };
+    weekly.sun = { ...weekly.sun, hasLunch: false };
+    ["mon", "tue", "wed", "fri"].forEach((key) => {
+      if (weekly[key].status !== "closed" && weekly[key].status !== "morning") {
+        weekly[key].hasLunch = true;
+      }
+    });
+  }
+
   return {
     ...structuredClone(base),
     ...saved,
-    weekly: { ...structuredClone(base.weekly), ...(saved.weekly || {}) },
+    schemaVersion: base.schemaVersion,
+    lunch: { ...structuredClone(base.lunch), ...(saved.lunch || {}) },
+    weekly,
     specials: Array.isArray(saved.specials) ? saved.specials : [],
   };
 }

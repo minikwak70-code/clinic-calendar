@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>진료 스케줄 캘린더</title>
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
     <main class="app-shell">
@@ -42,6 +42,16 @@
               <h2>요일별 진료시간</h2>
               <button class="ghost-button" id="applyTemplate" type="button">기본값</button>
             </div>
+            <div class="lunch-editor">
+              <label>
+                <span>점심 시작</span>
+                <input id="lunchStart" type="time" />
+              </label>
+              <label>
+                <span>점심 종료</span>
+                <input id="lunchEnd" type="time" />
+              </label>
+            </div>
             <div id="weekdayRows" class="weekday-rows"></div>
           </section>
 
@@ -59,6 +69,7 @@
                 <span>구분</span>
                 <select id="specialType">
                   <option value="closed">휴무일</option>
+                  <option value="morning">오전진료</option>
                   <option value="night">야간진료</option>
                   <option value="extended">연장진료</option>
                   <option value="notice">안내</option>
@@ -103,6 +114,7 @@
 
           <div class="legend" aria-label="범례">
             <span><i class="legend-dot regular"></i>일반진료</span>
+            <span><i class="legend-dot morning"></i>오전진료</span>
             <span><i class="legend-dot night"></i>야간진료</span>
             <span><i class="legend-dot extended"></i>연장진료</span>
             <span><i class="legend-dot closed"></i>휴무일</span>
@@ -122,6 +134,6 @@
       </section>
     </main>
     <canvas id="exportCanvas" width="2400" height="1700" hidden></canvas>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=6"></script>
   </body>
 </html>
