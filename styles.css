@@ -390,7 +390,7 @@ select:focus {
 .legend {
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 28px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 800;

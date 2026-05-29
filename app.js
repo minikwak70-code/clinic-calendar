@@ -328,7 +328,7 @@ function downloadCalendar() {
   const { year, month } = parseMonth(state.month);
   const rowCount = getExportDays(year, month).length / 7;
   canvas.width = 2400;
-  canvas.height = 520 + rowCount * 260;
+  canvas.height = 570 + rowCount * 260;
   const ctx = canvas.getContext("2d");
   drawExport(ctx, canvas.width, canvas.height);
 
@@ -347,7 +347,7 @@ function drawExport(ctx, width, height) {
   const cardW = width - cardX * 2;
   const cardH = height - cardY * 2;
   const gridX = pad;
-  const gridY = 365;
+  const gridY = 415;
   const gap = 16;
   const days = getExportDays(year, month);
   const rowCount = days.length / 7;
