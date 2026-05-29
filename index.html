@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>진료 스케줄 캘린더</title>
+    <link rel="stylesheet" href="styles.css?v=5" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="control-pane" aria-label="진료 스케줄 입력">
+        <div class="brand-block">
+          <p class="eyebrow">Clinic Calendar Studio</p>
+          <h1>진료 스케줄 캘린더</h1>
+        </div>
+
+        <form id="scheduleForm" class="form-stack">
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>기본 정보</h2>
+            </div>
+            <label>
+              <span>병원명</span>
+              <input id="clinicName" type="text" autocomplete="organization" />
+            </label>
+            <label>
+              <span>안내 문구</span>
+              <input id="clinicNote" type="text" />
+            </label>
+            <label>
+              <span>표시 월</span>
+              <input id="monthInput" type="month" />
+            </label>
+            <label class="option-row">
+              <input id="showAdjacentMonths" type="checkbox" />
+              <span>전달/다음달 날짜 표시</span>
+            </label>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>요일별 진료시간</h2>
+              <button class="ghost-button" id="applyTemplate" type="button">기본값</button>
+            </div>
+            <div id="weekdayRows" class="weekday-rows"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>특정일 표시</h2>
+              <button class="ghost-button" id="addSpecial" type="button">추가</button>
+            </div>
+            <div class="special-editor">
+              <label>
+                <span>날짜</span>
+                <input id="specialDate" type="date" />
+              </label>
+              <label>
+                <span>구분</span>
+                <select id="specialType">
+                  <option value="closed">휴무일</option>
+                  <option value="night">야간진료</option>
+                  <option value="extended">연장진료</option>
+                  <option value="notice">안내</option>
+                </select>
+              </label>
+              <label>
+                <span>시간/사유 메모</span>
+                <input id="specialText" type="text" placeholder="휴무: 학회 참석 / 야간: 14:00-21:00" />
+              </label>
+            </div>
+            <div id="specialList" class="special-list" aria-live="polite"></div>
+          </section>
+        </form>
+      </section>
+
+      <section class="calendar-pane" aria-label="달력 미리보기">
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2 id="previewTitle">월간 진료 일정</h2>
+          </div>
+          <div class="toolbar-actions">
+            <button id="prevMonth" class="icon-button" type="button" aria-label="이전 달">‹</button>
+            <button id="todayMonth" class="secondary-button" type="button">이번 달</button>
+            <button id="nextMonth" class="icon-button" type="button" aria-label="다음 달">›</button>
+            <button id="downloadPng" class="primary-button" type="button">PNG 다운로드</button>
+          </div>
+        </div>
+
+        <div id="calendarCard" class="calendar-card">
+          <div class="calendar-header">
+            <div>
+              <p id="calendarKicker">월간 진료 일정</p>
+              <h2 id="calendarClinic">공덕경희한의원</h2>
+              <p id="calendarNote">진료 일정은 병원 사정에 따라 변경될 수 있습니다.</p>
+            </div>
+            <div class="month-badge">
+              <span id="calendarYear">2026</span>
+              <strong id="calendarMonth">05</strong>
+            </div>
+          </div>
+
+          <div class="legend" aria-label="범례">
+            <span><i class="legend-dot regular"></i>일반진료</span>
+            <span><i class="legend-dot night"></i>야간진료</span>
+            <span><i class="legend-dot extended"></i>연장진료</span>
+            <span><i class="legend-dot closed"></i>휴무일</span>
+          </div>
+
+          <div class="week-labels" aria-hidden="true">
+            <span>일</span>
+            <span>월</span>
+            <span>화</span>
+            <span>수</span>
+            <span>목</span>
+            <span>금</span>
+            <span>토</span>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </div>
+      </section>
+    </main>
+    <canvas id="exportCanvas" width="2400" height="1700" hidden></canvas>
+    <script src="app.js?v=4"></script>
+  </body>
+</html>
