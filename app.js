@@ -367,6 +367,10 @@ function drawExport(ctx, width, height) {
   ctx.font = "900 88px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
   drawExportText(ctx, state.clinicName || defaultState.clinicName, pad, 238, { tracking: -3.2 });
 
+  ctx.fillStyle = "#66736f";
+  ctx.font = "700 28px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
+  drawExportText(ctx, state.clinicNote || defaultState.clinicNote, pad, 294, { tracking: -1.1 });
+
   drawRoundRect(ctx, width - 330, 100, 230, 180, 26, "#f7faf6", "#dfe6e2", 3);
   ctx.fillStyle = "#66736f";
   ctx.font = "900 34px Malgun Gothic, Apple SD Gothic Neo, sans-serif";
